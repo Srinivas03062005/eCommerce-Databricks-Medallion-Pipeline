@@ -1,66 +1,467 @@
-# eCommerce Medallion Pipeline — README (Detailed)
+# 🛒 eCommerce Medallion Data Pipeline
 
-Overview
---------
-This repository implements an eCommerce medallion data pipeline designed to run on Databricks (Spark + Delta Lake). The pipeline follows Bronze → Silver → Gold stages to ingest raw CSV files, clean and standardize data, and produce analytics-ready tables and a denormalized view for dashboarding.
+An end-to-end **eCommerce Data Pipeline** built on **Databricks, Apache Spark, and Delta Lake** following the **Medallion Architecture (Bronze → Silver → Gold)**.
 
-Quick confirmation
-------------------
-- `1_medallion_processing_dim/1_dim_bronze.py` ingests dimension sources into the Bronze layer: `brands`, `category`, `products`, `customers`, and `date` (written to `ecommerce.bronze.*` tables). It does NOT ingest `order_items` — fact ingestion is implemented under `1_medallion_processing_fact/`.
-
-Repository layout (important files)
-----------------------------------
-- `1_setup/setup_catalog.py` — Creates `ecommerce` catalog and `bronze`, `silver`, `gold` schemas.
-- `1_medallion_processing_dim/1_dim_bronze.py` — Bronze ingestion for dimensions (brands, category, products, customers, date).
-- `1_medallion_processing_dim/2_dim_silver.py` — Silver cleaning and type conversions for dimensions; writes `slv_*` tables.
-- `1_medallion_processing_dim/3_dim_gold.py` — Builds gold dimension tables (`gld_dim_products`, `gld_dim_customers`, `gld_dim_date`).
-- `1_medallion_processing_fact/1_fact_bronze.py` — Bronze ingestion for `order_items` facts.
-- `1_medallion_processing_fact/2_fact_silver.py` — Cleans and converts fact columns; writes `slv_order_items`.
-- `1_medallion_processing_fact/3_fact_gold.py` — Computes business metrics (gross, discount, net), FX conversion, and writes `gld_fact_order_items`.
-- `1_dashboard_code/denormalise_table_query.txt` — SQL to create `ecommerce.gold.fact_transactions_denorm` (joins facts with date and product dims).
-- `1_data_sets/ecomm-raw-data/` — Sample CSV inputs used by the pipeline.
-
-How `1_dim_bronze.py` works (high level)
----------------------------------------
-- Uses explicit `StructType` schemas for each source to avoid parsing ambiguity.
-- Reads raw CSVs from a mounted path (the scripts reference `/Volumes/ecommerce/source_data/raw/...`).
-- Adds metadata columns such as `_source_file`, `file_name`, `ingested_at` / `ingest_timestamp`.
-- Writes Delta tables to `ecommerce.bronze.<table>` using `.saveAsTable(...).` with `mergeSchema=true`.
-
-Paths and environment
----------------------
-- The scripts assume a Databricks Spark session and mounted storage paths. Before running, update `raw_data_path` variables to your DBFS or mounted path (for example: `dbfs:/mnt/ecommerce/source_data/raw/...` or `s3a://...`).
-- The code is notebook-style: `%sql` cells and `display()` are used. Execute as Databricks notebooks or adapt to plain Python Spark jobs.
-
-Execution order (recommended)
------------------------------
-1. Run `1_setup/setup_catalog.py` to create catalog/schemas.
-2. Run `1_medallion_processing_dim/1_dim_bronze.py` to populate Bronze dimension tables.
-3. Run `1_medallion_processing_fact/1_fact_bronze.py` to ingest fact Bronze tables.
-4. Run Silver scripts: `2_dim_silver.py` then `2_fact_silver.py`.
-5. Run Gold scripts: `3_dim_gold.py` then `3_fact_gold.py`.
-6. Create the denormalized view using `1_dashboard_code/denormalise_table_query.txt`.
-
-Quick validation queries
-------------------------
-Use these in a Databricks SQL cell or a Spark SQL call:
-
-```
-SELECT count(*) FROM ecommerce.bronze.brz_brands;
-SELECT count(*) FROM ecommerce.silver.slv_products;
-SELECT count(*) FROM ecommerce.gold.gld_dim_products;
-SELECT count(*) FROM ecommerce.gold.gld_fact_order_items;
-```
-
-Findings and recommendations
-----------------------------
-- Finding: `1_dim_bronze.py` correctly ingests the dimension CSVs listed above and writes them to Bronze. It does not handle `order_items` (the fact ingest lives under `1_medallion_processing_fact/1_fact_bronze.py`).
-- Recommendation: Update the raw path variables to your cluster mount before running. Prefer `dbfs:/` or cloud storage URIs for reproducible runs.
-- Recommendation: Consider parameterizing the raw path and catalog name (for example via widget or environment variables) for easier reuse across environments.
-
-If you want
------------
-- I can replace the hard-coded `/Volumes/...` paths with a small config at the top of each script and add a brief `Getting Started` section with exact commands to run these notebooks in Databricks.
+The pipeline ingests raw CSV datasets, performs data cleaning and standardization, applies business transformations, calculates KPIs, and produces analytics-ready tables optimized for BI dashboards and reporting.
 
 ---
-Generated on 2026-07-09
+
+# 📌 Project Overview
+
+This project demonstrates a modern Data Engineering pipeline using the Medallion Architecture.
+
+### Bronze Layer
+- Ingests raw CSV datasets
+- Uses explicit `StructType` schemas
+- Stores raw data without modifications
+- Tracks metadata such as:
+  - Source file
+  - Ingestion timestamp
+
+### Silver Layer
+- Cleans and validates data
+- Removes duplicates
+- Handles null values
+- Performs type casting
+- Standardizes column formats
+- Filters invalid records
+
+### Gold Layer
+- Creates business-ready tables
+- Computes KPIs including:
+  - Gross Amount
+  - Discount Amount
+  - Net Amount
+- Applies FX (Foreign Exchange) conversions
+- Builds denormalized reporting tables for dashboards
+
+---
+
+# 🏗️ Architecture
+
+```
+                Raw CSV Files
+                      │
+                      ▼
+            ┌─────────────────┐
+            │     Bronze       │
+            │ Raw Ingestion    │
+            └─────────────────┘
+                      │
+                      ▼
+            ┌─────────────────┐
+            │     Silver       │
+            │ Clean & Validate │
+            └─────────────────┘
+                      │
+                      ▼
+            ┌─────────────────┐
+            │      Gold        │
+            │ Business Models  │
+            └─────────────────┘
+                      │
+                      ▼
+              BI Dashboards
+```
+
+---
+
+# 📂 Repository Structure
+
+```
+.
+├── 1_setup/
+│   └── setup_catalog.py
+│
+├── 1_medallion_processing_dim/
+│   ├── 1_dim_bronze.py
+│   ├── 2_dim_silver.py
+│   └── 3_dim_gold.py
+│
+├── 1_medallion_processing_fact/
+│   ├── 1_fact_bronze.py
+│   ├── 2_fact_silver.py
+│   └── 3_fact_gold.py
+│
+├── 1_dashboard_code/
+│   └── denormalise_table_query.txt
+│
+└── 1_data_sets/
+    └── ecomm-raw-data/
+```
+
+---
+
+# 📁 Directory Details
+
+## 1_setup
+
+### setup_catalog.py
+
+Creates the Unity Catalog objects:
+
+- ecommerce catalog
+- bronze schema
+- silver schema
+- gold schema
+
+---
+
+## 1_medallion_processing_dim
+
+### 1_dim_bronze.py
+
+Loads raw dimension datasets into Bronze tables.
+
+Examples:
+
+- Brands
+- Categories
+- Products
+- Customers
+- Date
+
+---
+
+### 2_dim_silver.py
+
+Transforms Bronze dimension tables by:
+
+- Removing duplicates
+- Type casting
+- Cleaning invalid values
+- Standardizing formats
+
+---
+
+### 3_dim_gold.py
+
+Builds Gold dimension tables such as:
+
+- gld_dim_products
+- gld_dim_customers
+- gld_dim_category
+- gld_dim_brand
+- gld_dim_date
+
+---
+
+## 1_medallion_processing_fact
+
+### 1_fact_bronze.py
+
+Loads raw **order_items** transaction data into Bronze.
+
+---
+
+### 2_fact_silver.py
+
+Processes transaction data by:
+
+- Cleaning
+- Deduplication
+- Validation
+- Standardization
+
+---
+
+### 3_fact_gold.py
+
+Implements business logic including:
+
+- Gross Amount
+- Discount Amount
+- Net Amount
+- FX Currency Conversion
+
+Creates the final Gold Fact table.
+
+---
+
+## 1_dashboard_code
+
+### denormalise_table_query.txt
+
+Contains the SQL query used to generate the final reporting table:
+
+```
+ecommerce.gold.fact_transactions_denorm
+```
+
+This denormalized table is optimized for BI tools like:
+
+- Power BI
+- Tableau
+- Databricks SQL Dashboard
+
+---
+
+# ⚙️ Environment Configuration
+
+The notebooks are designed to run inside Databricks.
+
+A recommended configuration block:
+
+```python
+dbutils.widgets.text("environment", "dev")
+dbutils.widgets.text("raw_data_path", "dbfs:/mnt/ecommerce/source_data/raw/")
+
+ENV = dbutils.widgets.get("environment")
+RAW_DATA_PATH = dbutils.widgets.get("raw_data_path")
+```
+
+This allows switching between development, testing, and production environments.
+
+---
+
+# 🚀 Execution Order
+
+Run the pipeline in the following order.
+
+```
+setup_catalog.py
+        │
+        ▼
+1_dim_bronze.py
+        │
+        ▼
+1_fact_bronze.py
+        │
+        ▼
+2_dim_silver.py
+        │
+        ▼
+2_fact_silver.py
+        │
+        ▼
+3_dim_gold.py
+        │
+        ▼
+3_fact_gold.py
+        │
+        ▼
+denormalise_table_query.txt
+```
+
+### Step 1
+
+Run
+
+```
+setup_catalog.py
+```
+
+Creates the required catalog and schemas.
+
+---
+
+### Step 2
+
+Run
+
+```
+1_dim_bronze.py
+```
+
+Loads raw dimension data.
+
+---
+
+### Step 3
+
+Run
+
+```
+1_fact_bronze.py
+```
+
+Loads raw transaction data.
+
+---
+
+### Step 4
+
+Run
+
+```
+2_dim_silver.py
+```
+
+Processes dimension tables.
+
+---
+
+### Step 5
+
+Run
+
+```
+2_fact_silver.py
+```
+
+Processes fact tables.
+
+---
+
+### Step 6
+
+Run
+
+```
+3_dim_gold.py
+```
+
+Creates Gold dimensions.
+
+---
+
+### Step 7
+
+Run
+
+```
+3_fact_gold.py
+```
+
+Creates Gold fact tables with business metrics.
+
+---
+
+### Step 8
+
+Execute
+
+```
+denormalise_table_query.txt
+```
+
+Creates the reporting view.
+
+---
+
+# 🔍 Data Validation
+
+Example SQL queries for monitoring the pipeline.
+
+## Bronze
+
+```sql
+SELECT COUNT(*)
+FROM ecommerce.bronze.brz_brands;
+```
+
+---
+
+## Silver
+
+```sql
+SELECT COUNT(*)
+FROM ecommerce.silver.slv_products;
+```
+
+---
+
+## Gold Dimensions
+
+```sql
+SELECT COUNT(*)
+FROM ecommerce.gold.gld_dim_products;
+```
+
+---
+
+## Gold Facts
+
+```sql
+SELECT COUNT(*)
+FROM ecommerce.gold.gld_fact_order_items;
+```
+
+---
+
+# ✅ Best Practices Implemented
+
+### Explicit Schema Enforcement
+
+- Uses `StructType`
+- Prevents schema drift
+- Improves data quality
+
+---
+
+### Auditability
+
+Every Bronze record stores metadata including:
+
+- Source file
+- Ingestion timestamp
+
+This makes debugging and lineage tracking easier.
+
+---
+
+### Schema Evolution
+
+Tables are written using:
+
+```python
+.saveAsTable(...)
+```
+
+along with
+
+```python
+mergeSchema=True
+```
+
+allowing new columns to be added without breaking existing pipelines.
+
+---
+
+### Data Quality
+
+The Silver layer performs:
+
+- Null handling
+- Duplicate removal
+- Type validation
+- Invalid record filtering
+- Standardized formatting
+
+---
+
+### Business Transformation
+
+The Gold layer computes:
+
+- Gross Sales
+- Discounts
+- Net Sales
+- Currency Conversion
+- Reporting Tables
+
+---
+
+# 🛠️ Technologies Used
+
+- Databricks
+- Apache Spark
+- PySpark
+- Delta Lake
+- Unity Catalog
+- Databricks SQL
+- SQL
+- Python
+
+---
+
+# 📊 Pipeline Outcome
+
+This project demonstrates a production-style Medallion Architecture pipeline that:
+
+- Ingests raw eCommerce data
+- Cleans and standardizes datasets
+- Builds trusted dimensional and fact tables
+- Computes business KPIs
+- Generates analytics-ready reporting tables
+- Supports BI dashboards using Delta Lake and Databricks SQL
