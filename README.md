@@ -235,25 +235,6 @@ Compatible with:
 - Tableau
 - Databricks SQL Dashboards
 
----
-
-# Environment Configuration
-
-The notebooks are designed to run inside Databricks.
-
-Recommended configuration:
-
-```python
-dbutils.widgets.text("environment", "dev")
-dbutils.widgets.text("raw_data_path", "dbfs:/mnt/ecommerce/source_data/raw/")
-
-ENV = dbutils.widgets.get("environment")
-RAW_DATA_PATH = dbutils.widgets.get("raw_data_path")
-```
-
-This allows the same notebooks to be used across development, testing, and production environments.
-
----
 
 # Pipeline Execution Order
 
