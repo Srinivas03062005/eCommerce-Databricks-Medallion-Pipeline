@@ -1,43 +1,50 @@
-# eCommerce Medallion Data Pipeline
+# 🛒 eCommerce Medallion Data Pipeline
 
-An end-to-end **eCommerce Data Pipeline** built on **Databricks, Apache Spark, and Delta Lake** following the **Medallion Architecture (Bronze → Silver → Gold)**.
+An end-to-end **eCommerce Data Pipeline** built using **Databricks, Apache Spark, and Delta Lake** following the **Medallion Architecture (Bronze → Silver → Gold)**.
 
-The pipeline ingests raw CSV datasets, performs data cleaning and standardization, applies business transformations, calculates KPIs, and produces analytics-ready tables optimized for BI dashboards and reporting.
+The pipeline ingests raw CSV datasets into Delta tables, performs data cleansing and standardization, applies business transformations, computes key business metrics, and produces analytics-ready tables optimized for BI reporting.
 
 ---
 
-# Project Overview
+# 📌 Project Overview
 
-This project demonstrates a modern Data Engineering pipeline using the Medallion Architecture.
+This project demonstrates a production-style Data Engineering pipeline using the Medallion Architecture.
 
-### Bronze Layer
-- Ingests raw CSV datasets
+## 🥉 Bronze Layer
+
+- Ingests raw CSV datasets into Delta tables
 - Uses explicit `StructType` schemas
-- Stores raw data without modifications
-- Tracks metadata such as:
+- Preserves raw source data
+- Captures ingestion metadata such as:
   - Source file
   - Ingestion timestamp
 
-### Silver Layer
+---
+
+## 🥈 Silver Layer
+
 - Cleans and validates data
-- Removes duplicates
+- Removes duplicate records
 - Handles null values
 - Performs type casting
 - Standardizes column formats
 - Filters invalid records
 
-### Gold Layer
-- Creates business-ready tables
-- Computes KPIs including:
+---
+
+## 🥇 Gold Layer
+
+- Builds analytics-ready dimensional models
+- Computes business KPIs including:
   - Gross Amount
   - Discount Amount
   - Net Amount
-- Applies FX (Foreign Exchange) conversions
-- Builds denormalized reporting tables for dashboards
+- Performs FX (Foreign Exchange) conversions
+- Produces denormalized reporting tables for BI dashboards
 
 ---
 
-# Architecture
+# 🏗️ Architecture
 
 ```
                 Raw CSV Files
@@ -61,12 +68,12 @@ This project demonstrates a modern Data Engineering pipeline using the Medallion
             └─────────────────┘
                       │
                       ▼
-              BI Dashboards
+          Reporting & BI Dashboards
 ```
 
 ---
 
-# Repository Structure
+# 📂 Repository Structure
 
 ```
 .
@@ -92,115 +99,149 @@ This project demonstrates a modern Data Engineering pipeline using the Medallion
 
 ---
 
-# Directory Details
+# 📁 Directory Details
 
 ## 1_setup
 
 ### setup_catalog.py
 
-Creates the Unity Catalog objects:
+Creates the Unity Catalog objects required for the project:
 
-- ecommerce catalog
-- bronze schema
-- silver schema
-- gold schema
-
----
-
-## 1_medallion_processing_dim
-
-### 1_dim_bronze.py
-
-Loads raw dimension datasets into Bronze tables.
-
-Examples:
-
-- Brands
-- Categories
-- Products
-- Customers
-- Date
+- `ecommerce` Catalog
+- `bronze` Schema
+- `silver` Schema
+- `gold` Schema
+- `source_data` Schema
 
 ---
 
-### 2_dim_silver.py
+# 📂 1_medallion_processing_dim
 
-Transforms Bronze dimension tables by:
+## 1_dim_bronze.py
 
-- Removing duplicates
-- Type casting
-- Cleaning invalid values
-- Standardizing formats
+Loads the raw dimension datasets into the **Bronze** layer as Delta tables.
 
----
+### Bronze Tables Created
 
-### 3_dim_gold.py
+- `brz_brands`
+- `brz_category`
+- `brz_products`
+- `brz_customers`
+- `brz_calendar`
 
-Builds Gold dimension tables such as:
-
-- gld_dim_products
-- gld_dim_customers
-- gld_dim_category
-- gld_dim_brand
-- gld_dim_date
+Each table is ingested using explicit schemas and includes ingestion metadata for data lineage and auditing.
 
 ---
 
-## 1_medallion_processing_fact
+## 2_dim_silver.py
 
-### 1_fact_bronze.py
+Processes the Bronze dimension tables into the **Silver** layer by:
 
-Loads raw **order_items** transaction data into Bronze.
+- Removing duplicate records
+- Cleaning invalid and null values
+- Casting columns to appropriate data types
+- Standardizing data formats
 
----
+### Silver Tables Created
 
-### 2_fact_silver.py
-
-Processes transaction data by:
-
-- Cleaning
-- Deduplication
-- Validation
-- Standardization
-
----
-
-### 3_fact_gold.py
-
-Implements business logic including:
-
-- Gross Amount
-- Discount Amount
-- Net Amount
-- FX Currency Conversion
-
-Creates the final Gold Fact table.
+- `slv_brands`
+- `slv_category`
+- `slv_products`
+- `slv_customers`
+- `slv_calendar`
 
 ---
 
-## 1_dashboard_code
+## 3_dim_gold.py
 
-### denormalise_table_query.txt
+Builds analytics-ready dimension tables in the **Gold** layer.
 
-Contains the SQL query used to generate the final reporting table:
+### Gold Tables Created
 
-```
-ecommerce.gold.fact_transactions_denorm
-```
+- `gld_dim_products`
+- `gld_dim_customers`
+- `gld_dim_date`
 
-This denormalized table is optimized for BI tools like:
+These tables are optimized for joins with fact tables and downstream analytics.
+
+---
+
+# 📂 1_medallion_processing_fact
+
+## 1_fact_bronze.py
+
+Loads the raw **order_items** transactional dataset into the Bronze layer.
+
+### Bronze Table Created
+
+- `brz_order_items`
+
+---
+
+## 2_fact_silver.py
+
+Processes Bronze transaction data into the Silver layer by:
+
+- Removing duplicate transactions
+- Cleaning invalid records
+- Standardizing data types
+- Validating transactional data
+
+### Silver Table Created
+
+- `slv_order_items`
+
+---
+
+## 3_fact_gold.py
+
+Applies business logic to create the final Gold fact table.
+
+Business transformations include:
+
+- Gross Amount calculation
+- Discount Amount calculation
+- Net Amount calculation
+- FX Currency conversion
+
+### Gold Table Created
+
+- `gld_fact_order_items`
+
+---
+
+# 📂 1_dashboard_code
+
+## denormalise_table_query.txt
+
+Contains the SQL query that creates the final reporting table.
+
+### Reporting Table Created
+
+- `fact_transactions_denorm`
+
+The query joins the following Gold tables:
+
+- `gld_fact_order_items`
+- `gld_dim_products`
+- `gld_dim_customers`
+- `gld_dim_date`
+
+to create a denormalized reporting table optimized for business intelligence and analytics.
+
+Compatible with:
 
 - Power BI
 - Tableau
-- Databricks SQL Dashboard
+- Databricks SQL Dashboards
 
 ---
 
-# Environment Configuration
+# ⚙️ Environment Configuration
 
 The notebooks are designed to run inside Databricks.
 
-A recommended configuration block:
+Recommended configuration:
 
 ```python
 dbutils.widgets.text("environment", "dev")
@@ -210,13 +251,13 @@ ENV = dbutils.widgets.get("environment")
 RAW_DATA_PATH = dbutils.widgets.get("raw_data_path")
 ```
 
-This allows switching between development, testing, and production environments.
+This allows the same notebooks to be used across development, testing, and production environments.
 
 ---
 
-# Execution Order
+# 🚀 Pipeline Execution Order
 
-Run the pipeline in the following order.
+Run the notebooks in the following sequence:
 
 ```
 setup_catalog.py
@@ -243,105 +284,111 @@ setup_catalog.py
 denormalise_table_query.txt
 ```
 
-### Step 1
+---
 
-Run
+## Step 1
+
+Run:
 
 ```
 setup_catalog.py
 ```
 
-Creates the required catalog and schemas.
+Creates the catalog and schemas.
 
 ---
 
-### Step 2
+## Step 2
 
-Run
+Run:
 
 ```
 1_dim_bronze.py
 ```
 
-Loads raw dimension data.
+Loads all dimension datasets into the Bronze layer.
 
 ---
 
-### Step 3
+## Step 3
 
-Run
+Run:
 
 ```
 1_fact_bronze.py
 ```
 
-Loads raw transaction data.
+Loads transactional data into the Bronze layer.
 
 ---
 
-### Step 4
+## Step 4
 
-Run
+Run:
 
 ```
 2_dim_silver.py
 ```
 
-Processes dimension tables.
+Cleans and standardizes dimension tables.
 
 ---
 
-### Step 5
+## Step 5
 
-Run
+Run:
 
 ```
 2_fact_silver.py
 ```
 
-Processes fact tables.
+Processes transactional data into the Silver layer.
 
 ---
 
-### Step 6
+## Step 6
 
-Run
+Run:
 
 ```
 3_dim_gold.py
 ```
 
-Creates Gold dimensions.
+Builds Gold dimension tables.
 
 ---
 
-### Step 7
+## Step 7
 
-Run
+Run:
 
 ```
 3_fact_gold.py
 ```
 
-Creates Gold fact tables with business metrics.
+Creates the final Gold fact table with business metrics.
 
 ---
 
-### Step 8
+## Step 8
 
-Execute
+Execute:
 
 ```
 denormalise_table_query.txt
 ```
 
-Creates the reporting view.
+Creates the final reporting table:
+
+```
+fact_transactions_denorm
+```
 
 ---
 
-# Data Validation
+# 🔍 Data Validation
 
-Example SQL queries for monitoring the pipeline.
+Verify data at each layer using SQL.
 
 ## Bronze
 
@@ -379,24 +426,41 @@ FROM ecommerce.gold.gld_fact_order_items;
 
 ---
 
-# Best Practices Implemented
+## Final Reporting Table
 
-### Explicit Schema Enforcement
-
-- Uses `StructType`
-- Prevents schema drift
-- Improves data quality
+```sql
+SELECT COUNT(*)
+FROM ecommerce.gold.fact_transactions_denorm;
+```
 
 ---
 
-### Auditability
+# ✅ Best Practices Implemented
 
-Every Bronze record stores metadata including:
+### Explicit Schema Enforcement
+
+- Uses `StructType` schemas for all raw datasets
+- Prevents schema drift
+- Improves ingestion reliability
+
+---
+
+### Delta Lake Storage
+
+- All layers are stored as Delta tables
+- Supports ACID transactions
+- Improves query performance and reliability
+
+---
+
+### Auditability & Data Lineage
+
+Every Bronze table captures:
 
 - Source file
 - Ingestion timestamp
 
-This makes debugging and lineage tracking easier.
+making debugging and lineage tracking easier.
 
 ---
 
@@ -408,7 +472,7 @@ Tables are written using:
 .saveAsTable(...)
 ```
 
-along with
+with:
 
 ```python
 mergeSchema=True
@@ -422,27 +486,27 @@ allowing new columns to be added without breaking existing pipelines.
 
 The Silver layer performs:
 
-- Null handling
 - Duplicate removal
+- Null handling
 - Type validation
+- Data standardization
 - Invalid record filtering
-- Standardized formatting
 
 ---
 
-### Business Transformation
+### Business Transformations
 
 The Gold layer computes:
 
 - Gross Sales
-- Discounts
+- Discount Amount
 - Net Sales
-- Currency Conversion
-- Reporting Tables
+- FX Currency Conversion
+- Analytics-ready Fact Tables
 
 ---
 
-# Technologies Used
+# 🛠️ Technologies Used
 
 - Databricks
 - Apache Spark
@@ -455,13 +519,16 @@ The Gold layer computes:
 
 ---
 
-# Pipeline Outcome
+# 📊 Pipeline Outcome
 
 This project demonstrates a production-style Medallion Architecture pipeline that:
 
-- Ingests raw eCommerce data
-- Cleans and standardizes datasets
-- Builds trusted dimensional and fact tables
-- Computes business KPIs
-- Generates analytics-ready reporting tables
-- Supports BI dashboards using Delta Lake and Databricks SQL
+- Ingests raw eCommerce datasets into Delta tables
+- Cleans and validates data using the Silver layer
+- Builds trusted Gold dimension and fact tables
+- Computes business metrics and KPIs
+- Creates a denormalized reporting table for BI dashboards
+- Enables scalable analytics using Databricks, Spark, and Delta Lake
+
+
+
