@@ -1,4 +1,4 @@
-# 🛒 eCommerce Medallion Data Pipeline
+# eCommerce Medallion Data Pipeline
 
 An end-to-end **eCommerce Data Pipeline** built on **Databricks, Apache Spark, and Delta Lake** following the **Medallion Architecture (Bronze → Silver → Gold)**.
 
@@ -6,7 +6,7 @@ The pipeline ingests raw CSV datasets, performs data cleaning and standardizatio
 
 ---
 
-# 📌 Project Overview
+# Project Overview
 
 This project demonstrates a modern Data Engineering pipeline using the Medallion Architecture.
 
@@ -37,7 +37,7 @@ This project demonstrates a modern Data Engineering pipeline using the Medallion
 
 ---
 
-# 🏗️ Architecture
+# Architecture
 
 ```
                 Raw CSV Files
@@ -66,7 +66,7 @@ This project demonstrates a modern Data Engineering pipeline using the Medallion
 
 ---
 
-# 📂 Repository Structure
+# Repository Structure
 
 ```
 .
@@ -92,7 +92,7 @@ This project demonstrates a modern Data Engineering pipeline using the Medallion
 
 ---
 
-# 📁 Directory Details
+# Directory Details
 
 ## 1_setup
 
@@ -196,7 +196,7 @@ This denormalized table is optimized for BI tools like:
 
 ---
 
-# ⚙️ Environment Configuration
+# Environment Configuration
 
 The notebooks are designed to run inside Databricks.
 
@@ -214,7 +214,7 @@ This allows switching between development, testing, and production environments.
 
 ---
 
-# 🚀 Execution Order
+# Execution Order
 
 Run the pipeline in the following order.
 
@@ -339,7 +339,7 @@ Creates the reporting view.
 
 ---
 
-# 🔍 Data Validation
+# Data Validation
 
 Example SQL queries for monitoring the pipeline.
 
@@ -379,7 +379,7 @@ FROM ecommerce.gold.gld_fact_order_items;
 
 ---
 
-# ✅ Best Practices Implemented
+# Best Practices Implemented
 
 ### Explicit Schema Enforcement
 
@@ -442,7 +442,7 @@ The Gold layer computes:
 
 ---
 
-# 🛠️ Technologies Used
+# Technologies Used
 
 - Databricks
 - Apache Spark
@@ -455,7 +455,7 @@ The Gold layer computes:
 
 ---
 
-# 📊 Pipeline Outcome
+# Pipeline Outcome
 
 This project demonstrates a production-style Medallion Architecture pipeline that:
 
