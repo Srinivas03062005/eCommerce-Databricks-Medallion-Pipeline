@@ -1,4 +1,4 @@
-# 🛒 eCommerce Medallion Data Pipeline
+# eCommerce Medallion Data Pipeline
 
 An end-to-end **eCommerce Data Pipeline** built using **Databricks, Apache Spark, and Delta Lake** following the **Medallion Architecture (Bronze → Silver → Gold)**.
 
@@ -6,11 +6,11 @@ The pipeline ingests raw CSV datasets into Delta tables, performs data cleansing
 
 ---
 
-# 📌 Project Overview
+# Project Overview
 
 This project demonstrates a production-style Data Engineering pipeline using the Medallion Architecture.
 
-## 🥉 Bronze Layer
+## Bronze Layer
 
 - Ingests raw CSV datasets into Delta tables
 - Uses explicit `StructType` schemas
@@ -21,7 +21,7 @@ This project demonstrates a production-style Data Engineering pipeline using the
 
 ---
 
-## 🥈 Silver Layer
+## Silver Layer
 
 - Cleans and validates data
 - Removes duplicate records
@@ -32,7 +32,7 @@ This project demonstrates a production-style Data Engineering pipeline using the
 
 ---
 
-## 🥇 Gold Layer
+## Gold Layer
 
 - Builds analytics-ready dimensional models
 - Computes business KPIs including:
@@ -44,7 +44,7 @@ This project demonstrates a production-style Data Engineering pipeline using the
 
 ---
 
-# 🏗️ Architecture
+# Architecture
 
 ```
                 Raw CSV Files
@@ -73,7 +73,7 @@ This project demonstrates a production-style Data Engineering pipeline using the
 
 ---
 
-# 📂 Repository Structure
+# Repository Structure
 
 ```
 .
@@ -99,7 +99,7 @@ This project demonstrates a production-style Data Engineering pipeline using the
 
 ---
 
-# 📁 Directory Details
+# Directory Details
 
 ## 1_setup
 
@@ -115,7 +115,7 @@ Creates the Unity Catalog objects required for the project:
 
 ---
 
-# 📂 1_medallion_processing_dim
+# 1_medallion_processing_dim
 
 ## 1_dim_bronze.py
 
@@ -166,7 +166,7 @@ These tables are optimized for joins with fact tables and downstream analytics.
 
 ---
 
-# 📂 1_medallion_processing_fact
+# 1_medallion_processing_fact
 
 ## 1_fact_bronze.py
 
@@ -210,7 +210,7 @@ Business transformations include:
 
 ---
 
-# 📂 1_dashboard_code
+# 1_dashboard_code
 
 ## denormalise_table_query.txt
 
@@ -237,7 +237,7 @@ Compatible with:
 
 ---
 
-# ⚙️ Environment Configuration
+# Environment Configuration
 
 The notebooks are designed to run inside Databricks.
 
@@ -255,7 +255,7 @@ This allows the same notebooks to be used across development, testing, and produ
 
 ---
 
-# 🚀 Pipeline Execution Order
+# Pipeline Execution Order
 
 Run the notebooks in the following sequence:
 
@@ -386,7 +386,7 @@ fact_transactions_denorm
 
 ---
 
-# 🔍 Data Validation
+# Data Validation
 
 Verify data at each layer using SQL.
 
@@ -435,7 +435,7 @@ FROM ecommerce.gold.fact_transactions_denorm;
 
 ---
 
-# ✅ Best Practices Implemented
+# Best Practices Implemented
 
 ### Explicit Schema Enforcement
 
@@ -506,7 +506,7 @@ The Gold layer computes:
 
 ---
 
-# 🛠️ Technologies Used
+# Technologies Used
 
 - Databricks
 - Apache Spark
@@ -519,7 +519,7 @@ The Gold layer computes:
 
 ---
 
-# 📊 Pipeline Outcome
+# Pipeline Outcome
 
 This project demonstrates a production-style Medallion Architecture pipeline that:
 
